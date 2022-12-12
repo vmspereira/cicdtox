@@ -87,7 +87,7 @@ def maybe_fn(f, v1, v2):
 
     :param f: a function
     :param v1: the first argument
-    :param v2: the second argument  
+    :param v2: the second argument
     """
     if v1 is None:
         return v2
@@ -353,6 +353,7 @@ class Boolean(Syntax):
         r = {'not': [EMPTY_LEAF, S_NOT], 'and': [S_AND],
              'or': [S_OR], '&': [S_AND], '|': [S_OR], '~': [EMPTY_LEAF, S_NOT]}
         return r
+
 
 class BooleanEvaluator:
     """A boolean evaluator.
