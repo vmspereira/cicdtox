@@ -3,13 +3,13 @@ name: CI-CD
 on:
   push:
     branches:
-    - workflow
+    - action
     tags:
     - '[0-9]+.[0-9]+.[0-9]+'
     - '[0-9]+.[0-9]+.[0-9]+a[0-9]+'
   pull_request:
     branches:
-    - workflow
+    - action
 
 jobs:
   test:
