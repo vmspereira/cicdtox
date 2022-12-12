@@ -3,3 +3,4 @@ __pycache__
 .eggs
 .tox
 exparse.egg-info
+.coverage

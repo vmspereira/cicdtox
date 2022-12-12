@@ -233,7 +233,7 @@ class Node(object):
         ops = self.get_operands()
         return set([i for i in ops if is_condition(i)])
 
-    def replace(self, r_map: Dict[str,Any]):
+    def replace(self, r_map: Dict[str, Any]):
         """Apply the mapping replacing to the tree
 
         Args:
@@ -267,7 +267,7 @@ class Node(object):
     def copy(self):
         if self.is_leaf():
             return Node(copy(self.value), None, None)
-        # just because mypy is stupid!!!    
+        # just because mypy is stupid!!!
         elif self.left is None or self.right is None:
             return Node(copy(self.value), None, None)
         else:
@@ -438,7 +438,7 @@ class GeneEvaluator:
 def tokenize_function(exp: str):
     p = 0
     s = -1
-    tokens : List[str] = []
+    tokens: List[str] = []
     i = 0
     while i < len(exp):
         if exp[i] == '(':
@@ -476,7 +476,7 @@ def build_tree(exp, rules):
             exp_list.extend(replace_dic[token.lower()])
         else:
             exp_list.append(token)
-    stack : List[str] = []
+    stack: List[str] = []
     tree_stack = []
     predecessor = None
     i = 0
