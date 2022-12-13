@@ -1,3 +1,3 @@
 __author__ = 'Vitor Pereira'
 __email__ = 'vpereira@ceb.uminho.pt'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
