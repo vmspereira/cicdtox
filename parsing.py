@@ -11,6 +11,8 @@ import re
 import sys
 from abc import abstractmethod
 from operator import add, sub, mul, truediv, pow
+from copy import copy
+from typing import Dict, List, Any
 
 # Boolean operator symbols
 S_AND = '&'
@@ -87,7 +89,7 @@ def maybe_fn(f, v1, v2):
 
     :param f: a function
     :param v1: the first argument
-    :param v2: the second argument  
+    :param v2: the second argument
     """
     if v1 is None:
         return v2
@@ -118,6 +120,8 @@ class Node(object):
         Raises:
             ValueError
         """
+        if (left is None and right is not None) or (left is not None and right is None):
+            raise ValueError("Invalid right/left elements")
         if left is not None and not isinstance(left, Node):
             raise ValueError("Invalid right element")
         if right is not None and not isinstance(right, Node):
@@ -140,25 +144,30 @@ class Node(object):
         """
         :returns: True if the node is a leaf False otherwise. Both left and right are None.
         """
-        return not self.left and not self.right
+        return self.left is None or self.right is None
 
     def is_empty_leaf(self):
         """
         :returns: True if the node is an empty leaf False otherwise.
         """
-        return self.value == EMPTY_LEAF
+        return self.is_leaf() and self.value == EMPTY_LEAF
 
     def is_unary(self):
         """
         :returns: True if the node is a unary operation False otherwise.
         """
-        return (self.left.is_empty_leaf() and not self.right.is_empty_leaf()) or (
-            not self.left.is_empty_leaf() and self.right.is_empty_leaf())
+        if self.left is None or self.right is None:
+            return False
+        else:
+            return (self.left.is_empty_leaf() and not self.right.is_empty_leaf()) or (
+                not self.left.is_empty_leaf() and self.right.is_empty_leaf())
 
     def is_binary(self):
         """
         :returns: True if the node is a binary operation False otherwise.
         """
+        if self.left is None or self.right is None:
+            return False
         return not self.left.is_empty_leaf() and not self.right.is_empty_leaf()
 
     def get_operands(self):
@@ -167,6 +176,8 @@ class Node(object):
                 return set()
             else:
                 return {self.value}
+        elif self.left is None or self.right is None:
+            return set()
         else:
             return self.left.get_operands().union(self.right.get_operands())
 
@@ -177,6 +188,8 @@ class Node(object):
                 return {self.value}
             else:
                 return set()
+        elif self.left is None or self.right is None:
+            return set()
         else:
             return self.left.get_parameters().union(self.right.get_parameters())
 
@@ -203,7 +216,7 @@ class Node(object):
         """
         if f_operand is None or f_operator is None:
             return eval(str(self))
-        elif self.is_leaf():
+        elif self.is_leaf() or self.left is None or self.right is None:
             return f_operand(self.value)
         else:
             return maybe_fn(f_operator(self.value),
@@ -220,7 +233,7 @@ class Node(object):
         ops = self.get_operands()
         return set([i for i in ops if is_condition(i)])
 
-    def replace(self, r_map: dict):
+    def replace(self, r_map: Dict[str, Any]):
         """Apply the mapping replacing to the tree
 
         Args:
@@ -229,7 +242,7 @@ class Node(object):
         Returns:
             Node: new Tree with replace entries
         """
-        if self.is_leaf():
+        if self.is_leaf() or self.left is None or self.right is None:
             v = r_map[self.value] if self.value in r_map.keys() else self.value
             return Node(v, None, None)
         else:
@@ -241,6 +254,9 @@ class Node(object):
                 return ''
             else:
                 return str(self.value)
+        # just because mypy is stupid this is done in the previous case!!!!
+        elif self.left is None or self.right is None:
+            return ''
         elif self.tp == 2:
             return ''.join([self.value, '( ', self.left.to_infix(), ' , ', self.right.to_infix(), ' )'])
         elif self.tp == 1:
@@ -250,9 +266,12 @@ class Node(object):
 
     def copy(self):
         if self.is_leaf():
-            return Node(self.value.copy(), None, None)
+            return Node(copy(self.value), None, None)
+        # just because mypy is stupid!!!
+        elif self.left is None or self.right is None:
+            return Node(copy(self.value), None, None)
         else:
-            return Node(self.value.copy(), self.left.copy(), self.right.copy(), self.tp)
+            return Node(copy(self.value), self.left.copy(), self.right.copy(), self.tp)
 
 
 class Syntax:
@@ -354,6 +373,7 @@ class Boolean(Syntax):
              'or': [S_OR], '&': [S_AND], '|': [S_OR], '~': [EMPTY_LEAF, S_NOT]}
         return r
 
+
 class BooleanEvaluator:
     """A boolean evaluator.
 
@@ -418,7 +438,7 @@ class GeneEvaluator:
 def tokenize_function(exp: str):
     p = 0
     s = -1
-    tokens = []
+    tokens: List[str] = []
     i = 0
     while i < len(exp):
         if exp[i] == '(':
@@ -456,7 +476,7 @@ def build_tree(exp, rules):
             exp_list.extend(replace_dic[token.lower()])
         else:
             exp_list.append(token)
-    stack = []
+    stack: List[str] = []
     tree_stack = []
     predecessor = None
     i = 0
@@ -475,9 +495,9 @@ def build_tree(exp, rules):
                 token = ' '.join(exp_list[i:p])
                 i = p - 1
 
-            if predecessor and not (rules.is_operator(predecessor) or predecessor in ['(', ')']):
-                s = tree_stack[-1].value
-                tree_stack[-1].value = s + " " + token
+            if predecessor and not (rules.is_operator(predecessor) or predecessor in ['(', ')']): # type: ignore
+                s = tree_stack[-1].value # type: ignore
+                tree_stack[-1].value = s + " " + token # type: ignore
             else:
                 if '(' in token:
                     f = tokenize_function(token)
